@@ -12,5 +12,22 @@ CHIP Xor {
     OUT out;
 
     PARTS:
-    // Put your code here:
+    Not(in=a, out=nota);
+    Not(in=b, out=notb);
+    And(a=nota, b=b, out=x1);
+    And(a=a, b=notb, out=x2);
+    Or(a=x1, b=x2, out=out);
 }
+
+/* Implementation note:
+   Solved based on the canonical form.
+
+   a | b | out
+   -----------
+   0   0   0
+   1   1   0
+   0   1   1
+   1   0   1
+
+   So, the canonical form is a'.b + a.b'.
+*/
