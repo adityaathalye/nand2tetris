@@ -13,5 +13,10 @@ CHIP And {
     OUT out;
 
     PARTS:
-    // Put your code here:
+    Nand(a=a, b=b, out=nandab);
+    Not(in=nandab, out=out);
 }
+
+/* Implementation note:
+   The output of And is simply the complement of the
+   output of the corresponding Nand.*/
