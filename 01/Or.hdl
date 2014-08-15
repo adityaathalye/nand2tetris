@@ -12,5 +12,18 @@ CHIP Or {
     OUT out;
 
     PARTS:
-    // Put your code here:
+    Not(in=a, out=nota);
+    Not(in=b, out=notb);
+    And(a=nota, b=notb, out=andab);
+    Not(in=andab, out=out);
 }
+/* Implementation note:
+   Solved by intuition...
+   The canonical representation of two-input OR is
+   a.b' + a'.b + a.b.
+
+   The only combination that remains is a=0 b=0.
+
+   Therefore, one can infer that the canonical representation
+   of OR is equivalent to the complement of the remaining case,
+   i.e. it's (a'.b')'*/
