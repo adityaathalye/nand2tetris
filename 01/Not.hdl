@@ -12,5 +12,12 @@ CHIP Not {
     OUT out;
 
     PARTS:
-    // Put your code here:
+    Nand(a=in, b=in, out=out);
 }
+
+/* Implementation note:
+   If we 'AND' a boolean with itself,
+   we'll always get back the same boolean.
+   Therefore, if we NAND a boolean with itself,
+   we'll always get back the complementary boolean.
+*/
