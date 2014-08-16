@@ -17,5 +17,54 @@ CHIP DMux8Way {
     OUT a, b, c, d, e, f, g, h;
 
     PARTS:
-    // Put your code here:
+    DMux4Way(in=in, sel[0]=sel[0], sel[1]=sel[1], a=p, b=q, c=r, d=s);
+    DMux(in=p, sel=sel[2], a=a, b=e);
+    DMux(in=q, sel=sel[2], a=b, b=f);
+    DMux(in=r, sel=sel[2], a=c, b=g);
+    DMux(in=s, sel=sel[2], a=d, b=h);
 }
+
+/* Implementation note:
+
+   This is a totally intuitive solution, based on pattern recognition.
+   I don't yet have the know-how to prove why it's correct.
+
+   s2 s1 s0  |  a   b   c   d   e   f   g   h  |  Canonical Forms
+   0  0  0      in  0   0   0   0   0   0   0     a = s2'.s1'.s0'.in
+   0  0  1      0   in  0   0   0   0   0   0     b = s2'.s1'.s0.in
+   0  1  0      0   0   in  0   0   0   0   0     c = s2'.s1.s0'.in
+   0  1  1      0   0   0   in  0   0   0   0     d = s2'.s1.s0.in
+   1  0  0      0   0   0   0   in  0   0   0     e = s2.s1'.s0'.in
+   1  0  1      0   0   0   0   0   in  0   0     f = s2.s1'.s0.in
+   1  1  0      0   0   0   0   0   0   in  0     g = s2.s1.s0'.in
+   1  1  1      0   0   0   0   0   0   0   in    h = s2.s1.s0.in
+
+   There are two recurring patterns in the Canonical Forms:
+
+   Pins "s1", "s0", "in" can be related by DMux4Way, to produce
+   4 internal pins.
+
+   So DMux4Way(in, s0, s1) becomes one building block.
+
+   Each output of A needs futher demultiplexing, based on s2's value.
+
+   So we look for patterns where we see common input expressions,
+   paired with s2's complement.
+
+   Rearranging the canonical representation:
+   a = s2'.s1'.s0'.in
+   e = s2.s1'.s0'.in
+   Which is DMux(s2, DMux4Way(in, s0, s1))
+
+   b = s2'.s1'.s0.in
+   f = s2.s1'.s0.in
+   Which is also DMux(s2, DMux4Way(in, s0, s1))
+
+   c = s2'.s1.s0'.in
+   g = s2.s1.s0'.in
+   Which is also DMux(s2, DMux4Way(in, s0, s1))
+
+   d = s2'.s1.s0.in
+   h = s2.s1.s0.in
+   Which is also DMux(s2, DMux4Way(in, s0, s1))
+   */
