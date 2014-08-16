@@ -16,5 +16,42 @@ CHIP DMux4Way {
     OUT a, b, c, d;
 
     PARTS:
-    // Put your code here:
+    DMux(in=in, sel=sel[0], a=x, b=y);
+    DMux(in=x, sel=sel[1], a=a, b=c);
+    DMux(in=y, sel=sel[1], a=b, b=d);
 }
+/*  Implementation note:
+    Carrying forward, the intuition of composing chips from
+    primitive variants of the same kind.
+
+    s1  s0 |  a   b   c   d
+    0   0     in  0   0   0
+    0   1     0   in  0   0
+    1   0     0   0   in  0
+    1   1     0   0   0   in
+
+    Canonical forms:
+
+    a = s1'.s0'.in
+    b = s1'.s0.in
+    c = s1.s0'.in
+    d = s1.s0.in
+
+    Which transform to:
+    a = s1'.DMux(s0,in)
+    b = s1'.DMux(s0,in)
+    c = s1.DMux(s0,in)
+    d = s1.DMux(s0,in)
+
+    Which transform to:
+    a = DMux(DMux(s0,in), s1)
+    b = DMux(DMux(s0,in), s1)
+    c = DMux(DMux(s0,in), s1)
+    d = DMux(DMux(s0,in), s1)
+
+    The expression for each output is identical,
+    BUT the ordering of pins is important.
+
+    Also for this design, pins S0 and S1 will have to be forked,
+    and the output wires must cross over.
+*/
