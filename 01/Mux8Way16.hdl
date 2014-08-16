@@ -18,5 +18,51 @@ CHIP Mux8Way16 {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    /* IMP. SYNTAX NOTE:
+       Refer to the interface for Mux4Way16, and then note the
+       assignment of the "sel" pins below. Basically, I tried,
+       on a hunch, to _explicitly_ refer to _specific_ pins in the
+       hardware description of a composite gate. Lucky break, it works!
+     */
+    Mux4Way16(a=a, b=b, c=c, d=d, sel[0]=sel[0], sel[1]=sel[1], out=i);
+    Mux4Way16(a=e, b=f, c=g, d=h, sel[0]=sel[0], sel[1]=sel[1], out=j);
+    Mux16(a=i, b=j, sel=sel[2], out=out);
 }
+/* Implementation notes:
+
+   HOLY MULTIPLEXERS, FIRST TIME RIGHT, BITMAN!
+
+   The intuition comes from the solution for Mux4Way16,
+   which was composed of other, more primitive Muxes.
+
+   The reduced truth table for Mux4Way16 is:
+
+    s2      s1      s0     out   Canonical rep
+    0       0       0       a      s2'.s1'.s0'.a
+    0       0       1       b    + s2'.s1'.s0.b
+    0       1       0       c    + s2'.s1.s0'.c
+    0       1       1       d    + s2'.s1.s0.d
+    1       0       0       e    + s2.s1'.s0'.e
+    1       0       1       f    + s2.s1'.s0.f
+    1       1       0       g    + s2.s1.s0'.g
+    1       1       1       h    + s2.s1.s0.h
+   (Where: s2 = sel2, s1=sel1, s0=sel0)
+
+   The table gives us the canonical form as follows:
+   (Taking a hint from the canonical form of the primitive Mux,
+   and of Mux4Way16.)
+
+   Canonical rep:
+     s2'.(s1'.s0'.a + s1'.s0.b + s1.s0'.c + s1.s0.d)
+   + s2.(s1'.s0'.e + s1'.s0.f + s1.s0'.g + s1.s0.h)
+
+   Which reduces to:
+     s2'.(Mux4Way16 a, b, c, d, s[0..1])
+   + s2.(Mux4Way16, e, f, g, h, s[0..1])
+
+   Which further becomes:
+
+   Mux16((Mux4Way16 a, b, c, d, s[0..1]),
+         (Mux4Way16, e, f, g, h, s[0..1]),
+         s2)
+*/
