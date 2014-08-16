@@ -16,5 +16,43 @@ CHIP Mux4Way16 {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    Mux16(a=a, b=b, sel=sel[0], out=e);
+    Mux16(a=c, b=d, sel=sel[0], out=f);
+    Mux16(a=e, b=f, sel=sel[1], out=out);
 }
+/* Implementation note:
+
+   The basic idea was to try and compose primitive muxes
+   into this composite mux.
+
+   Abstraction FTW!
+
+   The reduced truth table for Mux4Way16 is:
+   sel[1]  sel[0]  out
+    0       0       a
+    0       1       b
+    1       0       c
+    1       1       d
+
+    The table gives us the canonical form as follows:
+    (Taking a hint from the canonical form of the simplest Mux,
+    Mux.hdl, which happens to be sel'.a + sel.b.)
+
+      sel[1]'.sel[0]'.a
+    + sel[1]'.sel[0].b
+    + sel[1].sel[0]'.c
+    + sel[1].sel[0].d
+
+    This can be transformed to:
+      sel[1]'.(sel[0]'.a + sel[0].b)
+    + sel[1].(sel[0]'.c + sel[0].d)
+
+    Which can be expressed as muxes:
+      sel[1]'.Mux(a, b, sel[0])
+    + sel[1].Mux(c, d, sel[0])
+
+    And this itself is a mux pattern that can be expressed as:
+      Mux(Mux(a, b, sel[0]),
+          Mux(c, d, sel[0]),
+          sel[1])
+    */
