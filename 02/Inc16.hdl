@@ -14,6 +14,11 @@ CHIP Inc16 {
     PARTS:
     Not(in=in[0], out=x);
     Or(a=in[0], b=x, out=y);
+    Add16(a=in, b[0]=y, out=out);
+
+    /*
+    Alternatively, do it the hard way, using lots of HalfAdders:
+
     HalfAdder(a=in[0], b=y, sum=out[0], carry=c0);
     HalfAdder(a=in[1], b=c0, sum=out[1], carry=c1);
     HalfAdder(a=in[2], b=c1, sum=out[2], carry=c2);
@@ -30,10 +35,15 @@ CHIP Inc16 {
     HalfAdder(a=in[13], b=c12, sum=out[13], carry=c13);
     HalfAdder(a=in[14], b=c13, sum=out[14], carry=c14);
     HalfAdder(a=in[15], b=c14, sum=out[15], carry=c15);
+    */
 }
 /*  Implementation notes:
 
     1. Hack around to get an always-1 bit, because the simulator
-       does not allow constants like 1 or 0. It demands a named pin.
+       does not allow us to directly feed constants like 1 or 0.
+       It demands a valid, named pin.
     2. Then it's HalfAdders all the way down.
+         OR
+       Then it's a single Add16, which is fed in[16] on one bus,
+       and only the 0th bit is set to 1, on the second bus.
 */
