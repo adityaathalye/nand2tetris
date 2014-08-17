@@ -13,11 +13,19 @@ CHIP FullAdder {
         carry;   // Left bit of a + b + c
 
     PARTS:
-    Xor(a=b, b=c, out=xorbc);
-    And(a=b, b=c, out=andbc);
-    Xor(a=a, b=xorbc, out=sum);
-    And(a=a, b=xorbc, out=w1);
-    Or(a=andbc, b=w1, out=carry);
+    HalfAdder(a=b, b=c, sum=sumbc, carry=c1);
+    HalfAdder(a=a, b=sumbc, sum=sum, carry=c2);
+    Or(a=c1, b=c2, out=carry);
+
+    // Implementation directly based on the Canonical forms
+    // of Sum(a, b, c) and Carry(a, b, c):
+    /*
+       Xor(a=b, b=c, out=xorbc);
+       And(a=b, b=c, out=andbc);
+       Xor(a=a, b=xorbc, out=sum);
+       And(a=a, b=xorbc, out=w1);
+       Or(a=andbc, b=w1, out=carry);
+    */
 }
 
 /*  Implementation note:
@@ -32,14 +40,39 @@ CHIP FullAdder {
     1  1  0     1      0
     1  1  1     1      1
 
-    Canonical forms:
+    [A] Canonical forms:
 
-    Sum (a, b, c)   = a'.b'.c + a'.b.c' + a.b'.c' + a.b.c
+    Sum(a, b, c)    = a'.b'.c + a'.b.c' + a.b'.c' + a.b.c
                     = a'.(b'.c + b.c') + a.(b'.c' + b.c)
-                    = a'.Xor(b, c) + a.Not(Xor(b,c))
+                    = a'.Xor(b, c) + a.Not(Xor(b, c))
                     = Xor(a, Xor(b,c))
 
-    Carry (a, b, c) = a'.b.c + a.b'.c + a.b.c' + a.b.c
+    Carry(a, b, c)  = a'.b.c + a.b'.c + a.b.c' + a.b.c
                     = b.c.(a' + a) + a.(b'.c + b.c')
                     = b.c + a.Xor(b, c)
+
+    [B] Another approach, to express FullAdder in terms of half-adders:
+
+    Sum(a, b, c)    = a'.b'.c + a'.b.c' + a.b'.c' + a.b.c
+                    = a'.(b'.c + b.c') + a.(b'.c' + b.c)
+                    = a'.Xor(b, c) + a.Not(Xor(b, c))
+                    = a'.Sum(b, c) + a.Not(Sum(b, c))
+                    = Xor(a, Sum(b, c))
+
+    Carry(a, b, c)  = a'.b.c + a.b'.c + a.b.c' + a.b.c
+                    = b.c.(a' + a) + a.(b'.c + b.c')
+                    = b.c + a.Xor(b, c)
+                    = Or(Carry(b, c), And(a, Sum(b, c))
+
+    Looking at the Sum and Carry parts,
+
+    HalfAdder(a, Sum(b, c)) produces: Sum(a, Sum(b, c)) and
+                                      Carry(a, Sum(b, c))
+
+    So, we can also express FullAdder(a, b, c) as:
+
+    Sum (a, b, c)   = Sum(a, Sum(b, c))
+    Carry(a, b, c)  = Or(Carry(b, c),
+                         Carry(a, Sum(b, c)))
+
 */
