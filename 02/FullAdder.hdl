@@ -13,5 +13,33 @@ CHIP FullAdder {
         carry;   // Left bit of a + b + c
 
     PARTS:
-    // Put you code here:
+    Xor(a=b, b=c, out=xorbc);
+    And(a=b, b=c, out=andbc);
+    Xor(a=a, b=xorbc, out=sum);
+    And(a=a, b=xorbc, out=w1);
+    Or(a=andbc, b=w1, out=carry);
 }
+
+/*  Implementation note:
+
+    a  b  c  | carry  sum
+    0  0  0     0      0
+    0  0  1     0      1
+    0  1  0     0      1
+    0  1  1     1      0
+    1  0  0     0      1
+    1  0  1     1      0
+    1  1  0     1      0
+    1  1  1     1      1
+
+    Canonical forms:
+
+    Sum (a, b, c)   = a'.b'.c + a'.b.c' + a.b'.c' + a.b.c
+                    = a'.(b'.c + b.c') + a.(b'.c' + b.c)
+                    = a'.Xor(b, c) + a.Not(Xor(b,c))
+                    = Xor(a, Xor(b,c))
+
+    Carry (a, b, c) = a'.b.c + a.b'.c + a.b.c' + a.b.c
+                    = b.c.(a' + a) + a.(b'.c + b.c')
+                    = b.c + a.Xor(b, c)
+*/
