@@ -14,5 +14,23 @@ CHIP Bit {
     OUT out;
 
     PARTS:
-    // Put your code here:
+    Mux(a=dffout, b=in, sel=load, out=muxout);
+    DFF(in=muxout, out=dffout);
+    And(a=dffout, b=dffout, out=out);
 }
+/*  Implementation notes:
+
+    Figure 3.1 in Chapter 3, shows: A bit can be constructed using
+    a Mux and a DFF.
+
+    Appendix A.7.3 "Feedback Loops" explains: Any loop that has
+    at least one clocked chip as a dependency is allowed.
+
+    So we can create a loop by feeding the output of the DFF to one of
+    the inputs of the Mux, and then feeding the output of the Mux to
+    the input of the DFF.
+
+    Insight: Since we change the output state of the DFF only when
+    the 'load' bit is 1, the 'in' bit must be connected to the 'b' pin
+    of the Mux and the 'sel' of the Mux must be fed the load bit.
+*/
