@@ -46,34 +46,68 @@ CHIP ALU {
 
     PARTS:
     // 1. if (zx==1) set x = 0        // 16-bit constant
-    Not16(in=x, out=notx);
-    Mux16(a=x, b=notx, sel=zx, out=xmuxnotx);
-    And16(a=x, b=xmuxnotx, out=zxout);
+
+    // Insight: we can use a "false" bus
+    Mux16(a=x, b=false, sel=zx, out=zxout);
+
+        /* Original implementation:
+           Not16(in=x, out=notx);
+           Mux16(a=x, b=notx, sel=zx, out=xmuxnotx);
+           And16(a=x, b=xmuxnotx, out=zxout);
+        */
+
 
     // 2. if (nx==1) set x = ~x       // bitwise "not"
+
     Not16(in=zxout, out=notzxout);
     Mux16(a=zxout, b=notzxout, sel=nx, out=nxout);
 
+
     // 3. if (zy==1) set y = 0        // 16-bit constant
-    Not16(in=y, out=noty);
-    Mux16(a=y, b=noty, sel=zy, out=ymuxnoty);
-    And16(a=y, b=ymuxnoty, out=zyout);
+
+    // Insight: we can use a "false" bus
+       Mux16(a=y, b=false, sel=zy, out=zyout);
+
+        /* Original implementation:
+           Not16(in=y, out=noty);
+           Mux16(a=y, b=noty, sel=zy, out=ymuxnoty);
+           And16(a=y, b=ymuxnoty, out=zyout);
+        */
+
 
     // 4. if (ny==1) set y = ~y       // bitwise "not"
+
     Not16(in=zyout, out=notzyout);
     Mux16(a=zyout, b=notzyout, sel=ny, out=nyout);
 
+
     // 5. if (f==1)  set out = x + y  // integer 2's complement addition
+
     Add16(a=nxout, b=nyout, out=xplusy);
     And16(a=nxout, b=nyout, out=xandy);
     Mux16(a=xandy, b=xplusy, sel=f, out=fout);
 
+
     // 6. if (no==1) set out = ~out   // bitwise "not"
+
     Not16(in=fout, out=notfout);
     Mux16(a=fout, b=notfout, sel=no, out=zrout);
     And16(a=zrout, b=zrout, out=out);
 
+
     // 7. if (out==0) set zr = 1
+    /* Insight: out=0 if bitwise OR operations on all 16 bits
+       produces 0.
+
+       Of all the gates built so far, only Or8Way gates perform
+       bitwise OR operations out of the box.
+
+       We need 8-bit inputs, but all we see are 16-bit buses,
+       and we cannot fan out sub-buses from an existing bus.
+
+       However, it turns out that we can set output bits in
+       a controlled way.
+    */
     And16(a=zrout, b=zrout, out[0..7]=zrlow);
     And16(a=zrout, b=zrout, out[8..15]=zrup);
     Or8Way(in=zrlow, out=zrlowbit);
@@ -81,7 +115,9 @@ CHIP ALU {
     Or(a=zrlowbit, b=zrupbit, out=zrbit);
     Not(in=zrbit, out=zr);
 
+
     // 8. if (out<0) set ng = 1
+
+    // Insight: the leftmost bit of all negative numbers is '1'.
     And16(a=zrout, b=zrout, out[15]=ng);
-    // Because the codes of all negative numbers begin with a '1'.
 }
