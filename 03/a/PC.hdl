@@ -16,9 +16,43 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    Register(in=x, load=true, out=regout);
+    Inc16(in=regout, out=incregout);
+    Mux16(a=regout, b=incregout, sel=inc, out=incout);
+    Mux16(a=incout, b=in, sel=load, out=loadout);
+    Mux16(a=loadout, b=false, sel=reset, out=x);
+    And16(a=regout, b=regout, out=out);
 }
+/*  Implementation notes:
 
+    A Register is a must, in order to store a value,
+    and also to store an updated value when commanded.
 
+    On looking closely, it stands to reason, that the register
+    is always being set with one of the three types of values--
+    zero, past value incremented, or any 16-bit "in" value.
 
+    Why? Because we cannot predict in advance what the input
+    or control bits will be. We must always set it to some value "x".
 
+    But how to decide what "x" should be?
+
+    Enter logic.
+
+    Based on the function definition and some experimentation,
+    it's clear that the values "x" can take are mutually exclusive,
+    and there is a hierarchy of operations. "Reset" is the highest
+    order bit--the most "powerful". Then the load bit, then the inc
+    bit, and if nothing happens, then the past must continue.
+
+    So the value of x must pass through a chain of logic such that
+    if nothing happens it stays as it is.
+
+    This leads to the insight that if the Register is always being
+    set with it's "in" value "x", then then the register's "out"
+    must, in turn, feed the chain of logic. And so we have a loop.
+
+    At each stage, the value of x can be as-is or something else,
+    depending on a single bit. This is Mux behaviour. And so, Muxes
+    are the building blocks of the chain of logic.
+*/
